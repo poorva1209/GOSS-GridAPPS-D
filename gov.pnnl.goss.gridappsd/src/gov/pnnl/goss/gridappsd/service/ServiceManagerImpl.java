@@ -250,33 +250,59 @@ public class ServiceManagerImpl implements ServiceManager{
 				commands.add(runtimeOptions);
 			}
 
-			ProcessBuilder processAppBuilder = new ProcessBuilder(commands);
-			processAppBuilder.redirectErrorStream(true);
-			processAppBuilder.redirectOutput();
-			processAppBuilder.directory(serviceDirectory);
+//			ProcessBuilder processAppBuilder = new ProcessBuilder(commands);
+//			processAppBuilder.redirectErrorStream(true);
+//			processAppBuilder.redirectOutput();
+//			processAppBuilder.directory(serviceDirectory);
+//			try {
+//				process = processAppBuilder.start();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			
+			
+			ProcessBuilder processServiceBuilder = new ProcessBuilder(commands);
+			processServiceBuilder.directory(serviceDirectory);
+			processServiceBuilder.redirectErrorStream(true);
+			processServiceBuilder.redirectOutput();
 			try {
-				process = processAppBuilder.start();
+				process = processServiceBuilder.start();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
-			
-			ProcessBuilder processServiceBuilder = new ProcessBuilder(commands);
-			processServiceBuilder.redirectErrorStream(true);
-			processServiceBuilder.redirectOutput();
-
-			
 		} else if(serviceInfo.getType().equals(ServiceType.EXE)){
 			List<String> commands = new ArrayList<String>();
 			commands.add(serviceInfo.getExecution_path());
-			commands.add(runtimeOptions);
-			//TODO add other options
 			
+			 //Check if static args contain any replacement values
+			String staticArgs = serviceInfo.getStatic_args();
+		    if(staticArgs!=null){
+		    	if(staticArgs.contains("(")){
+			    	 String[] replaceArgs = StringUtils.substringsBetween(staticArgs, "(", ")");
+			    	 for(String args : replaceArgs){
+			    		staticArgs = staticArgs.replace("("+args+")",simulationContext.get(args).toString());
+			    	 }
+		    	}
+		    	commands.add(staticArgs);
+		    }
+		    
+			if(runtimeOptions!=null){
+				commands.add(runtimeOptions);
+			}
 			
 			ProcessBuilder processServiceBuilder = new ProcessBuilder(commands);
+			processServiceBuilder.directory(serviceDirectory);
 			processServiceBuilder.redirectErrorStream(true);
 			processServiceBuilder.redirectOutput();
+			try {
+				process = processServiceBuilder.start();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 			
 		} else if(serviceInfo.getType().equals(ServiceType.JAVA)){

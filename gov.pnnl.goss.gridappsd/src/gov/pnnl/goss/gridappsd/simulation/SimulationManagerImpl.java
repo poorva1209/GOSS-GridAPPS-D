@@ -55,6 +55,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -144,7 +145,7 @@ public class SimulationManagerImpl implements SimulationManager{
 	public void startSimulation(int simulationId, SimulationConfig simulationConfig, Map simulationContext){
 
 			try {
-				logManager.log(new LogMessage(this.getClass().getName(),
+				logManager.log(new LogMessage(this.getClass().getSimpleName(),
 						Integer.toString(simulationId), 
 						new Date().getTime(), 
 						"Starting simulation "+simulationId, 
@@ -367,7 +368,7 @@ public class SimulationManagerImpl implements SimulationManager{
 					catch(Exception e){
 							log.error("Error during simulation",e);
 							try {
-								logManager.log(new LogMessage(this.getClass().getName(),
+								logManager.log(new LogMessage(this.getClass().getSimpleName(),
 										Integer.toString(simulationId), 
 										new Date().getTime(), 
 										"Simulation error: "+e.getMessage(),
@@ -390,7 +391,7 @@ public class SimulationManagerImpl implements SimulationManager{
 							fncsBridgeProcess.destroy();
 						}*/
 						
-						for(String id : (String[])simulationContext.get("connectedServiceIds")){
+						for(String id : (ArrayList<String>)simulationContext.get("connectedServiceInstanceIds")){
 							appManager.stopAppInstance(id);
 						}
 						for(String id : (String[])simulationContext.get("connectedAppInstanceIds")){
