@@ -224,9 +224,10 @@ public class ServiceManagerImpl implements ServiceManager{
 
 		File serviceDirectory = new File(getServiceConfigDirectory().getAbsolutePath()
 				+ File.separator + serviceId);
+	
+		String logMessage = serviceDirectory.toString() + "\n" + runtimeOptions + "\n" + simulationContext.toString();
+		System.out.println(logMessage);
 		
-		
-			        
 	    Process process = null;
 		//something like 
 		if(serviceInfo.getType().equals(ServiceType.PYTHON)){
