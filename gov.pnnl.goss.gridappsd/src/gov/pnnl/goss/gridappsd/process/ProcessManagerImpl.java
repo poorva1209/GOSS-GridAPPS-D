@@ -39,21 +39,10 @@
  ******************************************************************************/
 package gov.pnnl.goss.gridappsd.process;
 
-import gov.pnnl.goss.gridappsd.api.AppManager;
-import gov.pnnl.goss.gridappsd.api.ConfigurationManager;
-import gov.pnnl.goss.gridappsd.api.LogManager;
-import gov.pnnl.goss.gridappsd.api.ProcessManager;
-import gov.pnnl.goss.gridappsd.api.ServiceManager;
-import gov.pnnl.goss.gridappsd.api.SimulationManager;
-import gov.pnnl.goss.gridappsd.api.StatusReporter;
-import gov.pnnl.goss.gridappsd.dto.LogMessage;
-import gov.pnnl.goss.gridappsd.dto.LogMessage.LogLevel;
-import gov.pnnl.goss.gridappsd.dto.LogMessage.ProcessStatus;
-import gov.pnnl.goss.gridappsd.utils.GridAppsDConstants;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,6 +52,19 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
+import gov.pnnl.goss.gridappsd.api.AppManager;
+import gov.pnnl.goss.gridappsd.api.ConfigurationManager;
+import gov.pnnl.goss.gridappsd.api.LogManager;
+import gov.pnnl.goss.gridappsd.api.ProcessManager;
+import gov.pnnl.goss.gridappsd.api.ServiceManager;
+import gov.pnnl.goss.gridappsd.api.SimulationManager;
+import gov.pnnl.goss.gridappsd.api.StatusReporter;
+import gov.pnnl.goss.gridappsd.dto.AppInfo;
+import gov.pnnl.goss.gridappsd.dto.AppInstance;
+import gov.pnnl.goss.gridappsd.dto.LogMessage;
+import gov.pnnl.goss.gridappsd.dto.LogMessage.LogLevel;
+import gov.pnnl.goss.gridappsd.dto.LogMessage.ProcessStatus;
+import gov.pnnl.goss.gridappsd.utils.GridAppsDConstants;
 import pnnl.goss.core.Client;
 import pnnl.goss.core.Client.PROTOCOL;
 import pnnl.goss.core.ClientFactory;
@@ -209,6 +211,17 @@ public class ProcessManagerImpl implements ProcessManager {
 						
 					} else if(event.getDestination().contains("log")){
 						logManager.log(LogMessage.parse(message.toString()), username,null);
+					}
+					else if(event.getDestination().contains(GridAppsDConstants.topic_requestListAppsWithInstances)){
+						
+						
+						List<AppInfo> apps = appManager.listApps();
+						for(AppInfo app : apps){
+							List<AppInstance> appInstances = appManager.listRunningApps(app.getId());
+							app.setInstances(appInstances);
+						}
+						 
+						client.publish(event.getReplyDestination(), apps.toString());
 					}
 					
 					//case GridAppsDConstants.topic_requestData : processDataRequest(); break;

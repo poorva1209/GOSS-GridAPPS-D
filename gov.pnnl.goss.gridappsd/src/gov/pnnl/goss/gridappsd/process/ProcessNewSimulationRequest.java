@@ -155,7 +155,7 @@ public class ProcessNewSimulationRequest {
 			simulationContext.put("simulationDir",simulationFile.getParentFile());
 			simulationContext.put("simulatorPath",serviceManager.getService(config.getSimulation_config().getSimulator()).getExecution_path());
 		
-			List<String> connectServiceInstanceIds = new ArrayList<String>();
+			List<String> connectedServiceInstanceIds = new ArrayList<String>();
 			List<String> connectedAppInstanceIds = new ArrayList<String>();
 		
 			for (ApplicationObject app : config.application_config
@@ -165,7 +165,7 @@ public class ProcessNewSimulationRequest {
 						.getPrereqs();
 				for (String prereqs : prereqsList) {
 					String serviceInstanceId = serviceManager.startServiceForSimultion(prereqs, null,simulationContext);
-					connectServiceInstanceIds.add(serviceInstanceId);
+					connectedServiceInstanceIds.add(serviceInstanceId);
 					logManager.log(new LogMessage(source, simId, new Date().getTime(),"Started "
 							+ app.getName() + " with instance id "
 							+ serviceInstanceId,LogLevel.DEBUG, ProcessStatus.RUNNING, true),
@@ -184,7 +184,7 @@ public class ProcessNewSimulationRequest {
 
 			}
 			
-			simulationContext.put("connectServiceInstanceIds",connectServiceInstanceIds);
+			simulationContext.put("connectedServiceInstanceIds",connectedServiceInstanceIds);
 			simulationContext.put("connectedAppInstanceIds",connectedAppInstanceIds);
 
 			// start simulation

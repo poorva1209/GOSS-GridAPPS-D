@@ -53,8 +53,15 @@ public class AppInstance implements Serializable{
 	String request_id;
 	String simulation_id;
 	Process process;
+	String user;
 	
 	
+	public String getUser() {
+		return user;
+	}
+	public void setUser(String user) {
+		this.user = user;
+	}
 	public AppInstance(String instance_id, AppInfo app_info, String runtime_options, String request_id, String simulation_id, Process process){
 		this.instance_id = instance_id;
 		this.app_info = app_info;
