@@ -1,7 +1,7 @@
  {
-	"name": "VVO",
-	"test_configuration": "ref_location1233",
-	"application": "VVO",
+	"name": "Sample_App",
+	"test_configuration": "./SampleTestConfig.json",
+	"application": "Sample_App",
 	"outputs":
    		 {"substation_link": ["xf_hvmv_sub"],
    		  "regulator_list": ["reg_FEEDER_REG", "reg_VREG2", "reg_VREG3", "reg_VREG4"],
@@ -15,5 +15,10 @@
     },
     "events" : [
 
-    ]
+    ],
+    "rules":[
+       {"name": "app_rules.py",
+        "port": 5000,
+        "topic":"input"
+     }  ]
 }
