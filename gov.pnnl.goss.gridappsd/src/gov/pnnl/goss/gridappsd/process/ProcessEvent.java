@@ -113,11 +113,23 @@ public class ProcessEvent implements GossResponseEvent {
 	@Override
 	public void onMessage(Serializable message) {
 
-		DataResponse event = (DataResponse)message;
-		String username  = GridAppsDConstants.username;
+		
 
-		int processId = ProcessManagerImpl.generateProcessId();
-		this.debug(processId, "Received message: "+ event.getData() +" on topic "+event.getDestination()+" from user "+username);
+		
+		
+		
+		
+		Thread thread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				DataResponse event = (DataResponse)message;
+				String username  = GridAppsDConstants.username;
+				
+				// TODO Auto-generated method stub
+				int processId = ProcessManagerImpl.generateProcessId();
+				this.debug(processId, "Received message: "+ event.getData() +" on topic "+event.getDestination()+" from user "+username);
 
 
 		try{ 
@@ -197,12 +209,15 @@ public class ProcessEvent implements GossResponseEvent {
 
 			} else if(event.getDestination().contains("log")){
 
-				logManager.log(LogMessage.parse(message.toString()), username, null);
+				logManager.log(LogMessage.parse(event.getData().toString()), username, null);
 
 			}
 			else if(event.getDestination().contains(GridAppsDConstants.topic_requestPlatformStatus)){
 				
 				RequestPlatformStatus request = RequestPlatformStatus.parse(event.getData().toString());
+				
+				this.debug(processId, "Creating response");
+				
 				 PlatformStatus platformStatus = new PlatformStatus();
 				if(request.isApplications())
 					platformStatus.setApplications(appManager.listApps());
@@ -212,7 +227,8 @@ public class ProcessEvent implements GossResponseEvent {
 					platformStatus.setAppInstances(appManager.listRunningApps());
 				if(request.isServiceInstances())
 					platformStatus.setServiceInstances(serviceManager.listRunningServices());
-				client.publish(event.getReplyDestination(), platformStatus);
+				this.debug(processId, "publishing response on "+event.getReplyDestination());
+				client.publish(event.getReplyDestination(), platformStatus.toString());
 			}
 		}catch(Exception e ){
 			StringWriter sw = new StringWriter();
@@ -220,69 +236,77 @@ public class ProcessEvent implements GossResponseEvent {
 			e.printStackTrace(pw);
 			this.error(processId,sw.toString());
 		}
+		
+			}
+			
+			
+			private void sendData(Client client, Destination replyDestination, Serializable data, int processId){
+				try {
+					DataResponse r = new DataResponse();
+					r.setData(data);
+					r.setResponseComplete(true);
+					client.publish(replyDestination, r);
+				} catch (Exception e) {
+					e.printStackTrace();
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					e.printStackTrace(pw);
+					this.error(processId,sw.toString());
+					//TODO log error and send error response
+				}
+			}
+
+
+			private void sendError(Client client, Destination replyDestination, String error, int processId){
+				try {
+					DataResponse r = new DataResponse();
+					r.setError(new DataError(error));
+					r.setResponseComplete(true);
+					client.publish(replyDestination, r);
+				} catch (Exception e) {
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					e.printStackTrace(pw);
+					this.error(processId,sw.toString());
+				}
+			}
+
+
+			private void debug(int processId, String message) {
+
+				LogMessage logMessage = new LogMessage();
+				logMessage.setSource(this.getClass().getSimpleName());
+				logMessage.setProcessId(Integer.toString(processId));
+				logMessage.setLogLevel(LogLevel.DEBUG);
+				logMessage.setProcessStatus(ProcessStatus.RUNNING);
+				logMessage.setLogMessage(message);
+				logMessage.setStoreToDb(true);
+				logMessage.setTimestamp(new Date().getTime());
+
+				logManager.log(logMessage, GridAppsDConstants.topic_platformLog);	
+
+			}
+
+			private void error(int processId, String message) {
+
+				LogMessage logMessage = new LogMessage();
+				logMessage.setSource(this.getClass().getSimpleName());
+				logMessage.setProcessId(Integer.toString(processId));
+				logMessage.setLogLevel(LogLevel.ERROR);
+				logMessage.setProcessStatus(ProcessStatus.ERROR);
+				logMessage.setLogMessage(message);
+				logMessage.setStoreToDb(true);
+				logMessage.setTimestamp(new Date().getTime());
+
+				logManager.log(logMessage, GridAppsDConstants.topic_platformLog);	
+
+			}
+		});
+		
+		thread.start();
 	}
 
 
-	private void sendData(Client client, Destination replyDestination, Serializable data, int processId){
-		try {
-			DataResponse r = new DataResponse();
-			r.setData(data);
-			r.setResponseComplete(true);
-			client.publish(replyDestination, r);
-		} catch (Exception e) {
-			e.printStackTrace();
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);
-			this.error(processId,sw.toString());
-			//TODO log error and send error response
-		}
-	}
 
-
-	private void sendError(Client client, Destination replyDestination, String error, int processId){
-		try {
-			DataResponse r = new DataResponse();
-			r.setError(new DataError(error));
-			r.setResponseComplete(true);
-			client.publish(replyDestination, r);
-		} catch (Exception e) {
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);
-			this.error(processId,sw.toString());
-		}
-	}
-
-
-	private void debug(int processId, String message) {
-
-		LogMessage logMessage = new LogMessage();
-		logMessage.setSource(this.getClass().getSimpleName());
-		logMessage.setProcessId(Integer.toString(processId));
-		logMessage.setLogLevel(LogLevel.DEBUG);
-		logMessage.setProcessStatus(ProcessStatus.RUNNING);
-		logMessage.setLogMessage(message);
-		logMessage.setStoreToDb(true);
-		logMessage.setTimestamp(new Date().getTime());
-
-		logManager.log(logMessage, GridAppsDConstants.topic_platformLog);	
-
-	}
-
-	private void error(int processId, String message) {
-
-		LogMessage logMessage = new LogMessage();
-		logMessage.setSource(this.getClass().getSimpleName());
-		logMessage.setProcessId(Integer.toString(processId));
-		logMessage.setLogLevel(LogLevel.ERROR);
-		logMessage.setProcessStatus(ProcessStatus.ERROR);
-		logMessage.setLogMessage(message);
-		logMessage.setStoreToDb(true);
-		logMessage.setTimestamp(new Date().getTime());
-
-		logManager.log(logMessage, GridAppsDConstants.topic_platformLog);	
-
-	}
 
 }

@@ -3,6 +3,11 @@ package gov.pnnl.goss.gridappsd.dto;
 import java.io.Serializable;
 import java.util.List;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+
+
 public class PlatformStatus implements Serializable{
 
 	private static final long serialVersionUID = 285312877963778626L;
@@ -49,6 +54,11 @@ public class PlatformStatus implements Serializable{
 	}
 	public void setServiceInstances(List<ServiceInstance> serviceInstances) {
 		this.serviceInstances = serviceInstances;
+	}
+	@Override
+	public String toString() {
+		Gson  gson = new Gson();
+		return gson.toJson(this);
 	}
 	
 }

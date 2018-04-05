@@ -48,11 +48,13 @@ import com.google.gson.JsonSyntaxException;
 
 public class ServiceInstance implements Serializable{
 	
+	private static final long serialVersionUID = 1L;
+	
 	String instance_id;
 	ServiceInfo servcie_info;
 	String runtime_options;
 	String simulation_id;
-	Process process;
+	transient Process process;
 	
 	
 	public ServiceInstance(String instance_id, ServiceInfo servcie_info, String runtime_options, String simulation_id, Process process){

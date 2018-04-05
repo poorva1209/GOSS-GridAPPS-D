@@ -416,6 +416,7 @@ def _send_simulation_status(status, message, log_level):
             log_level = 'INFO'
         t_now = datetime.utcnow()
         status_message = {
+	    "source": __file__,
             "processId" : "fncs_goss_bridge-"+str(simulation_id),
             "timestamp" : t_now.microsecond,
             "procesStatus" : status,
