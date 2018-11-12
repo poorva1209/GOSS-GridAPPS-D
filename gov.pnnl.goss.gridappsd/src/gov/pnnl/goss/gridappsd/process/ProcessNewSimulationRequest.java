@@ -259,8 +259,8 @@ public class ProcessNewSimulationRequest {
 					}
 
 
-
-					List<String> prereqsList = appManager.getApp(app.getName())
+					//Uncomment this once hardcoded pre-reqs in sampel app are removed.
+					/*List<String> prereqsList = appManager.getApp(app.getName())
 							.getPrereqs();
 					for (String prereqs : prereqsList) {
 						String serviceInstanceId = serviceManager.startServiceForSimultion(prereqs, null,simulationContext);
@@ -270,7 +270,7 @@ public class ProcessNewSimulationRequest {
 								+ serviceInstanceId,LogLevel.DEBUG, ProcessStatus.RUNNING, true),
 								GridAppsDConstants.topic_simulationLog
 										+ simulationId);
-					}
+					}*/
 
 					String appInstanceId = appManager.startAppForSimultion(app
 							.getName(), app.getConfig_string(), simulationContext);
@@ -289,6 +289,7 @@ public class ProcessNewSimulationRequest {
 			simContext.serviceInstanceIds = connectServiceInstanceIds;
 			simContext.appInstanceIds = connectedAppInstanceIds;
 
+			
 			// start simulation
 			logManager.log(new LogMessage(source, simId,new Date().getTime(),
 					"Starting simulation for id " + simulationId,LogLevel.DEBUG, ProcessStatus.RUNNING,true),

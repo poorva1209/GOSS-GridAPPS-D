@@ -50,8 +50,10 @@ import gov.pnnl.goss.gridappsd.dto.SimulationConfig;
 import gov.pnnl.goss.gridappsd.dto.SimulationContext;
 import gov.pnnl.goss.gridappsd.utils.GridAppsDConstants;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.dm.annotation.api.Component;
@@ -196,6 +198,22 @@ public class SimulationManagerImpl implements SimulationManager{
 	@Override
 	public SimulationContext getSimulationContextForId(String simulationId){
 		return this.simContexts.get(simulationId);
+	}
+	
+	public List<String> startPreReqs(SimulationConfig simulationConfig, int simulationId){
+		
+		List<String> connectServiceInstanceIds = new ArrayList<String>();
+		
+		List<String> prereqsList = serviceManager.getService(simulationConfig.getSimulator()).getService_dependencies();
+		for (String prereqs : prereqsList) {
+			String serviceInstanceId = serviceManager.startServiceForSimultion(prereqs, null,simulationContext);
+			connectServiceInstanceIds.add(serviceInstanceId);
+			logManager.log(new LogMessage(this.getClass().getSimpleName(), simulationId, new Date().getTime(),"Started "
+					+ prereqs + " with instance id "
+					+ serviceInstanceId,LogLevel.DEBUG, ProcessStatus.RUNNING, true),
+					GridAppsDConstants.topic_simulationLog
+							+ simulationId);
+		}
 	}
 	
 	
