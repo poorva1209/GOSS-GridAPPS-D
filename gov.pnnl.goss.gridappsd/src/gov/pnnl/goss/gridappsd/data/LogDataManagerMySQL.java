@@ -67,11 +67,11 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-
 import pnnl.goss.core.Client;
 import pnnl.goss.core.Client.PROTOCOL;
 import pnnl.goss.core.ClientFactory;
+
+import com.google.gson.Gson;
 
 
 @Component
@@ -182,7 +182,7 @@ public class LogDataManagerMySQL implements LogDataManager, DataManagerHandler {
 	}
 
 	@Override
-	public Serializable query(String source, String processId, long timestamp, LogLevel log_level, ProcessStatus process_status,
+	public Serializable query(String source, String processId, long startTimestamp, long endTimestamp, LogLevel log_level, ProcessStatus process_status,
 			String username) {
 		
 		if(connection==null){
@@ -238,11 +238,11 @@ public class LogDataManagerMySQL implements LogDataManager, DataManagerHandler {
 					where = true;
 				}
 			
-			if(timestamp!=new Long("0"))
+			if(startTimestamp!=new Long("0"))
 				if(where)
-					queryString+=" and timestamp="+timestamp;
+					queryString+=" and timestamp="+startTimestamp;
 				else{
-					queryString+=" timestamp="+timestamp;
+					queryString+=" timestamp="+startTimestamp;
 				}
 
 			preparedStatement = connection.prepareStatement(queryString);
@@ -317,7 +317,7 @@ public class LogDataManagerMySQL implements LogDataManager, DataManagerHandler {
 		if(request.getQuery()!=null)
 			return this.query(request.getQuery());
 		else
-			return this.query(request.getSource(), request.getProcessId(), request.getTimestamp(), request.getLogLevel(),request.getProcessStatus(), request.getUsername());
+			return this.query(request.getSource(), request.getProcessId(), request.getStartTime(), request.getEndTime(), request.getLogLevel(),request.getProcessStatus(), request.getUsername());
 
 	}
 	

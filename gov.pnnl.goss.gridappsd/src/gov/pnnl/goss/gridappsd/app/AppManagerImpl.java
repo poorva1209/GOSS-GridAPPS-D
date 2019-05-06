@@ -250,26 +250,15 @@ public class AppManagerImpl implements AppManager {
 
 	@Start
 	public void start(){
-		//statusReporter.reportStatus(String.format("Starting %s", this.getClass().getName()));
 		try{
-		logManager.log(new LogMessage(this.getClass().getName(),
-				null,
-				new Date().getTime(),
-				"Starting "+this.getClass().getName(),
-				LogLevel.INFO,
+		logManager.info("Starting "+this.getClass().getName(),null,
 				ProcessStatus.RUNNING,
-				true),GridAppsDConstants.username,
 				GridAppsDConstants.topic_platformLog);
 
 		scanForApps();
 
-		logManager.log(new LogMessage(this.getClass().getName(),
-				null,
-				new Date().getTime(),
-				String.format("Found %s applications", apps.size()),
-				LogLevel.INFO,
-				ProcessStatus.RUNNING,
-				true),GridAppsDConstants.username);
+		logManager.info(String.format("Found %s applications", apps.size()),
+				null,ProcessStatus.RUNNING,GridAppsDConstants.topic_platformLog);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -538,11 +527,8 @@ public class AppManagerImpl implements AppManager {
 			processAppBuilder.redirectErrorStream(true);
 			processAppBuilder.redirectOutput();
 			processAppBuilder.directory(appDirectory);
-			logManager.log(new LogMessage(this.getClass().getSimpleName(),
-					simulationId, new Date().getTime(),
-					"Starting app with command "+ String.join(" ",commands),
-					LogLevel.DEBUG, ProcessStatus.RUNNING, true),
-					GridAppsDConstants.topic_simulationLog+simulationId);
+			logManager.info("Starting "+appId+" with command "+ String.join(" ",commands),
+					simulationId,ProcessStatus.RUNNING,GridAppsDConstants.topic_simulationLog+simulationId);
 			try {
 				process = processAppBuilder.start();
 			} catch (IOException e) {
@@ -702,7 +688,7 @@ public class AppManagerImpl implements AppManager {
 					.toPath()));
 			appInfo = AppInfo.parse(appConfigStr);
 		} catch (IOException e) {
-			logManager.log(new LogMessage(this.getClass().getName(),null,new Date().getTime(), "Error while reading app config file: "+e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false),username,GridAppsDConstants.topic_platformLog);
+			logManager.error("Error while reading app config file: "+e.getMessage(), null,ProcessStatus.ERROR,GridAppsDConstants.topic_platformLog);
 		}
 
 		return appInfo;
@@ -717,7 +703,7 @@ public class AppManagerImpl implements AppManager {
 		try {
 			Files.write(confFile.toPath(), appInfo.toString().getBytes());
 		} catch (IOException e) {
-			logManager.log(new LogMessage(this.getClass().getName(),null, new Date().getTime(), "Error while writing app config file: "+e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false),username,GridAppsDConstants.topic_platformLog);
+			logManager.error("Error while writing app config file: "+e.getMessage(), null,ProcessStatus.ERROR, GridAppsDConstants.topic_platformLog);
 		}
 	}
 
@@ -743,11 +729,11 @@ public class AppManagerImpl implements AppManager {
 	            String line = null;
 	            try {
 	                while ((line = input.readLine()) != null) {
-	                	logManager.log(new LogMessage(this.getClass().getName(),appInstance.getInstance_id(), new Date().getTime(), line, LogLevel.INFO, ProcessStatus.RUNNING, false), username, GridAppsDConstants.topic_platformLog);
+	                	logManager.info(line, appInstance.getInstance_id(), ProcessStatus.RUNNING, GridAppsDConstants.topic_simulationLog+appInstance.getSimulation_id());
 	                }
 	            } catch (IOException e) {
 	            	e.printStackTrace();
-                	logManager.log(new LogMessage(this.getClass().getName(),appInstance.getInstance_id(), new Date().getTime(), e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false), username, GridAppsDConstants.topic_platformLog);
+                	logManager.error(e.getMessage(), appInstance.getInstance_id(), ProcessStatus.ERROR, GridAppsDConstants.topic_simulationLog+appInstance.getSimulation_id());
 	            }
 	        }
 	    }.start();

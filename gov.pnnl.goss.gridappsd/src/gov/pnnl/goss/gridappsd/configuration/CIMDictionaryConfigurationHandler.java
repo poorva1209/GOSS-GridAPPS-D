@@ -60,6 +60,7 @@ import gov.pnnl.goss.gridappsd.api.PowergridModelDataManager;
 import gov.pnnl.goss.gridappsd.api.SimulationManager;
 import gov.pnnl.goss.gridappsd.data.handlers.BlazegraphQueryHandler;
 import gov.pnnl.goss.gridappsd.dto.LogMessage.LogLevel;
+import gov.pnnl.goss.gridappsd.dto.LogMessage.ProcessStatus;
 import gov.pnnl.goss.gridappsd.dto.SimulationContext;
 import gov.pnnl.goss.gridappsd.utils.GridAppsDConstants;
 import pnnl.goss.core.Client;
@@ -120,7 +121,8 @@ public class CIMDictionaryConfigurationHandler extends BaseConfigurationHandler 
 				//If the config file already has been created for this simulation then return it
 				if(configFile.exists()){
 					printFileToOutput(configFile, out);
-					logRunning("Dictionary GridLAB-D configuration file for simulation "+simulationId+" already exists.", processId, username, logManager);
+					logManager.debug("Dictionary GridLAB-D configuration file for simulation "+simulationId+" already exists.", processId, 
+							ProcessStatus.RUNNING,GridAppsDConstants.topic_simulationLog+simulationId);
 					return;
 				}
 			} else {

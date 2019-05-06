@@ -63,11 +63,8 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
 	@Start
 	public void start(){
 		
-		
-		logManager.log(new LogMessage(this.getClass().getSimpleName(), null, 
-				new Date().getTime(), "Starting "+this.getClass().getSimpleName(), 
-				LogLevel.DEBUG, ProcessStatus.RUNNING, true), 
-				GridAppsDConstants.topic_platformLog);
+		logManager.info("Starting "+this.getClass().getSimpleName(), null,
+				ProcessStatus.RUNNING, GridAppsDConstants.topic_platformLog);
 		
 		dataManager.registerDataManagerHandler(this, DATA_MANAGER_TYPE);
 		provenUri = configManager.getConfigurationProperty(GridAppsDConstants.PROVEN_PATH);
@@ -83,6 +80,8 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
 				@Override
 				public void onMessage(Serializable message) {
 					DataResponse event = (DataResponse)message;
+					String dest = event.getDestination();
+					String simulationId = event.getDestination().substring(dest.lastIndexOf("."), dest.length());
 					try{
 						if(event.getDestination().contains("output"))
 								storeSimulationOutput(event.getData());
@@ -95,10 +94,8 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
 						e.printStackTrace(pw);
 						String sStackTrace = sw.toString(); // stack trace as a string
 						System.out.println(sStackTrace);
-						logManager.log(new LogMessage(this.getClass().getSimpleName(), null, 
-								new Date().getTime(), "Error storing timeseries data for message at "+event.getDestination()+" : "+sStackTrace, 
-								LogLevel.DEBUG, ProcessStatus.RUNNING, true), 
-								GridAppsDConstants.topic_platformLog);
+						logManager.error("Error storing timeseries data for message at "+event.getDestination()+" : "+sStackTrace, 
+								simulationId, ProcessStatus.RUNNING, GridAppsDConstants.topic_simulationLog+simulationId);
 					}
 				}
 			});

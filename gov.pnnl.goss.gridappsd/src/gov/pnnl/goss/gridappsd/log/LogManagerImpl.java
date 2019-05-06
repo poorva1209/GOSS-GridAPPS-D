@@ -48,6 +48,11 @@ import gov.pnnl.goss.gridappsd.dto.LogMessage.ProcessStatus;
 import gov.pnnl.goss.gridappsd.dto.RequestLogMessage;
 import gov.pnnl.goss.gridappsd.utils.GridAppsDConstants;
 
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.Date;
+
 import org.apache.felix.dm.annotation.api.Component;
 import org.apache.felix.dm.annotation.api.ServiceDependency;
 import org.apache.felix.dm.annotation.api.Start;
@@ -58,6 +63,8 @@ import org.slf4j.LoggerFactory;
 import pnnl.goss.core.Client;
 import pnnl.goss.core.Client.PROTOCOL;
 import pnnl.goss.core.ClientFactory;
+import pnnl.goss.core.DataResponse;
+import pnnl.goss.core.GossResponseEvent;
 
 /**
  * This class implements functionalities for Internal Function 409 Log Manager.
@@ -88,7 +95,7 @@ public class LogManagerImpl implements LogManager {
 	}
 
 	@Start
-	public void start() {
+	private void start() {
 		LogMessage logMessage = new LogMessage();
 		try {
 			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(
@@ -100,49 +107,67 @@ public class LogManagerImpl implements LogManager {
 			logMessage.setStoreToDb(true);
 			logMessage.setLogMessage("Starting " + this.getClass().getName());
 			client.publish(GridAppsDConstants.topic_platformLog, logMessage);
+			
+			client.subscribe(GridAppsDConstants.topic_simulationLog+".>", new GossResponseEvent() {
+				
+				@Override
+				public void onMessage(Serializable message) {
+					
+					DataResponse event = (DataResponse)message;
+					
+					try{
+						LogMessage logMessage = LogMessage.parse(event.getData().toString());
+						log(logMessage, event.getUsername(), null);
+						
+					}
+					catch(Exception e){
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						e.printStackTrace(pw);
+						this.error(sw.toString(),event.getUsername(),null);
+					}
+				}
+			});
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	/**
-	 * Writes the message in log file. Calls LogDataManager to save the log
-	 * message in data store if store_to_db is true in LogMessage object.
-	 * 
-	 * @param message
-	 *            an Object of gov.pnnl.goss.gridappsd.dto.LogMessage
-	 * @param username
-	 *            username of the user logging the message
-	 */
-	@Override
-	public void log(LogMessage message, String username, String topic) {
-		
-		if (topic != null && client != null)
-			client.publish(topic, message.toString());
+	private void log(LogMessage message, String username, String topic) {
 		
 		String source = message.getSource();
-		String requestId = message.getProcessId();
-		long timestamp = message.getTimestamp();
+		String processId = message.getProcessId();
+		long timestamp = new Date().getTime();
 		String log_message = message.getLogMessage();
 		//Default log message to empty if it is null to prevent sql error
 		if(log_message==null)
 			log_message = "";
 		LogLevel logLevel = message.getLogLevel();
-		ProcessStatus processStatus = message.getProcessStatus();
+		ProcessStatus status = message.getProcessStatus();
 		Boolean storeToDb = message.getStoreToDb();
 		
 		String logString;
-		if(requestId!=null)
-			logString = String.format("%s|%s|%s|%s|%s|%s\n%s\n", timestamp, source, requestId,
-				processStatus, username, logLevel, log_message);
+		if(processId!=null)
+			logString = String.format("%s|%s|%s|%s|%s|%s\n%s\n", timestamp, source, processId,
+				status, username, logLevel, log_message);
 		else
 			logString = String.format("%s|%s|%s|%s|%s\n%s\n", timestamp, source,
-					processStatus, username, logLevel, log_message);
+					status, username, logLevel, log_message);
 		if(logString.length() > 200 && message.getLogLevel()!=LogLevel.ERROR) {
 			logString = logString.substring(0,200);
 		}
-		switch(message.getLogLevel()) {
+		
+		log(logString, processId, status, logLevel, source, timestamp, storeToDb, username, topic);
+		
+	}
+	
+	private void log(String logString, String processId, ProcessStatus status, LogLevel logLevel, String source, long timestamp, boolean storeToDb, String username, String topic){
+		
+		if (topic != null && client != null)
+			client.publish(topic, new LogMessage(source, processId, logString, logLevel, status).toString());
+		
+		switch(logLevel) {
 			case TRACE:	log.trace(logString);
 						break;
 			case DEBUG:	log.debug(logString);
@@ -157,17 +182,84 @@ public class LogManagerImpl implements LogManager {
 						break;
 			default:	log.debug(logString);
 						break;
-				
 		}
 		
 		if(storeToDb)
-			store(source,requestId,timestamp,log_message,logLevel,processStatus,username);
-		
+			store(source, processId,timestamp,logString,logLevel,status,username);
+
 	}
 	
 	public void log(LogMessage message, String topic) {
 		this.log(message, GridAppsDConstants.username, topic);
 	}
+	
+	public void debug(String logString, String processId, ProcessStatus status, String topic){
+		
+		LogMessage logMessage = new LogMessage();
+		logMessage.setLogLevel(LogLevel.DEBUG);
+		logMessage.setProcessId(processId);
+		logMessage.setProcessStatus(status);
+		logMessage.setSource(Thread.currentThread().getStackTrace()[2].getClassName());
+		
+		this.log(logMessage, topic);
+		client.publish(topic, logMessage);
+		
+	}
+	
+	public void info(String logString, String processId, ProcessStatus status, String topic){
+		
+		LogMessage logMessage = new LogMessage();
+		logMessage.setLogLevel(LogLevel.INFO);
+		logMessage.setProcessId(processId);
+		logMessage.setProcessStatus(status);
+		logMessage.setSource(Thread.currentThread().getStackTrace()[2].getClassName());
+		
+		this.log(logMessage, topic);
+		client.publish(topic, logMessage);
+		
+	}
+	
+	public void trace(String logString, String processId, ProcessStatus status, String topic){
+		
+		LogMessage logMessage = new LogMessage();
+		logMessage.setLogLevel(LogLevel.TRACE);
+		logMessage.setProcessId(processId);
+		logMessage.setProcessStatus(status);
+		logMessage.setSource(Thread.currentThread().getStackTrace()[2].getClassName());
+		
+		this.log(logMessage, topic);
+		client.publish(topic, logMessage);
+		
+	}
+	
+	public void error(String logString, String processId, ProcessStatus status, String topic){
+		LogMessage logMessage = new LogMessage();
+		logMessage.setLogLevel(LogLevel.ERROR);
+		logMessage.setProcessId(processId);
+		logMessage.setProcessStatus(status);
+		logMessage.setSource(Thread.currentThread().getStackTrace()[2].getClassName());
+		this.log(logMessage, topic);
+	}
+	
+	public void fatal(String logString, String processId, ProcessStatus status, String topic){
+		LogMessage logMessage = new LogMessage();
+		logMessage.setLogLevel(LogLevel.ERROR);
+		logMessage.setProcessId(processId);
+		logMessage.setProcessStatus(status);
+		logMessage.setSource(Thread.currentThread().getStackTrace()[2].getClassName());
+		this.log(logMessage, topic);
+	}
+
+	public void warn(String logString, String processId, ProcessStatus status, String topic){
+		LogMessage logMessage = new LogMessage();
+		logMessage.setLogLevel(LogLevel.ERROR);
+		logMessage.setProcessId(processId);
+		logMessage.setProcessStatus(status);
+		logMessage.setSource(Thread.currentThread().getStackTrace()[2].getClassName());
+		this.log(logMessage, topic);
+	}
+	
+	
 	
 	private void store(String source, String requestId, long timestamp,
 			String log_message, LogLevel log_level, ProcessStatus process_status, String username) {
@@ -192,11 +284,10 @@ public class LogManagerImpl implements LogManager {
 		if(message.getQuery()==null){
 			String source = message.getSource();
 			String requestId = message.getProcessId();
-			long timestamp = message.getTimestamp();
 			LogLevel log_level = message.getLogLevel();
 			ProcessStatus process_status = message.getProcessStatus();
 			String username = "system";
-			logDataManager.query(source, requestId, timestamp, log_level, process_status, username);
+			logDataManager.query(source, requestId, message.getStartTime(),message.getEndTime(),log_level, process_status, username);
 		}
 		else{
 			logDataManager.query(message.getQuery());

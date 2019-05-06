@@ -49,7 +49,7 @@ public interface LogDataManager {
 	void store (String source, String processId, long timestamp,
 			String log_message, LogLevel log_level, ProcessStatus process_status, String username);
 	
-	Serializable query(String source, String processId, long timestamp, LogLevel log_level, ProcessStatus process_status, String username);
+	Serializable query(String source, String processId, long startTimestamp, long endTimestamp, LogLevel log_level, ProcessStatus process_status, String username);
 	
 	Serializable query(String queryString);
 

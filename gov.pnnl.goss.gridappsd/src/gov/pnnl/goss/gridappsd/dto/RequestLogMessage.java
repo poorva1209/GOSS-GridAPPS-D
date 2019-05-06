@@ -48,6 +48,8 @@ public class RequestLogMessage extends LogMessage {
 	
 	String username;
 	String query;
+	long startTime;
+	long endTime;
 	
 	public String getUsername() {
 		return username;
@@ -63,6 +65,22 @@ public class RequestLogMessage extends LogMessage {
 
 	public void setQuery(String query) {
 		this.query = query;
+	}
+	
+	public long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+
+	public long getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
 	}
 
 	public static RequestLogMessage parse(String jsonString) throws JsonSyntaxException {

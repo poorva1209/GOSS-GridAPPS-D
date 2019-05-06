@@ -41,33 +41,23 @@ package gov.pnnl.goss.gridappsd.api;
 
 import gov.pnnl.goss.gridappsd.dto.LogMessage;
 import gov.pnnl.goss.gridappsd.dto.RequestLogMessage;
+import gov.pnnl.goss.gridappsd.dto.LogMessage.LogLevel;
+import gov.pnnl.goss.gridappsd.dto.LogMessage.ProcessStatus;
 
 public interface LogManager {
 	
-	/**
-	 * Implementation of this method should writes the message in log file. And
-	 * calls LogDataManager to save the log message in data store if store_to_db
-	 * is true in LogMessage object.
-	 * 
-	 * @param message
-	 *            an Object of gov.pnnl.goss.gridappsd.dto.LogMessage
-	 * @param username
-	 *            username of the user logging the message
-	 * @param topic
-	 *            Message should be published on this topic if topic is not null. 
-	 */
-	void log(LogMessage message, String username, String topic);
+	void debug(String logString, String processId, ProcessStatus status, String topic);
 	
-	/**
-	 * Use platform's default username and call previous log method. 
-	 * 
-	 * @param message
-	 *            an Object of gov.pnnl.goss.gridappsd.dto.LogMessage
-	 * @param topic
-	 *            Message should be published on this topic if topic is not null. 
-	 */
-	void log(LogMessage message, String topic);
-
+	void info(String logString, String processId, ProcessStatus status, String topic);
+		
+	void trace(String logString, String processId, ProcessStatus status, String topic);
+	
+	void error(String logString, String processId, ProcessStatus status, String topic);
+	
+	void fatal(String logString, String processId, ProcessStatus status, String topic);
+	
+	void warn(String logString, String processId, ProcessStatus status, String topic);
+	
 	/**
 	 * Implementation of this method should call an implementation of
 	 * LogDataManager and get the log messages from data store based on the not
