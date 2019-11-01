@@ -50,6 +50,7 @@ import gov.pnnl.goss.gridappsd.dto.LogMessage.LogLevel;
 import gov.pnnl.goss.gridappsd.dto.LogMessage.ProcessStatus;
 import gov.pnnl.goss.gridappsd.dto.RequestTimeseriesData;
 import gov.pnnl.goss.gridappsd.utils.GridAppsDConstants;
+import pnnl.goss.core.security.SecurityConfig;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -79,6 +80,8 @@ public class GLDZiploadScheduleConfigurationHandler extends
 	volatile LogManager logManager;
 	@ServiceDependency
 	volatile DataManager dataManager;
+	@ServiceDependency
+    private volatile SecurityConfig securityConfig;
 
 	public static final String TYPENAME = "GridLAB-D Zipload Schedule";
 	public static final String DIRECTORY = "directory";
@@ -116,7 +119,7 @@ public class GLDZiploadScheduleConfigurationHandler extends
 					"No Config manager avilable for " + getClass().getSimpleName(), 
 					LogLevel.WARN, 
 					ProcessStatus.ERROR, 
-					true), 
+					true), securityConfig.getManagerUser(),
 					GridAppsDConstants.topic_platformLog);
 		}
 	}
