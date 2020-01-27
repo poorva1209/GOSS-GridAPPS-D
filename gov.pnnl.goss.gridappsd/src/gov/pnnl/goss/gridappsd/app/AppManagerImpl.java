@@ -74,11 +74,11 @@ import org.apache.felix.dm.annotation.api.Start;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
-
 import com.google.gson.JsonSyntaxException;
 
 import gov.pnnl.goss.gridappsd.api.AppManager;
 import gov.pnnl.goss.gridappsd.api.LogManager;
+import gov.pnnl.goss.gridappsd.api.TimeseriesDataManager;
 import gov.pnnl.goss.gridappsd.dto.AppInfo;
 import gov.pnnl.goss.gridappsd.dto.AppInfo.AppType;
 import gov.pnnl.goss.gridappsd.dto.AppInstance;
@@ -124,6 +124,9 @@ public class AppManagerImpl implements AppManager {
 	
     @ServiceDependency
     private volatile SecurityConfig securityConfig;
+    
+    @ServiceDependency
+    TimeseriesDataManager timeseriesDataManager;
 
 	private Dictionary<String, ?> configurationProperties;
 
@@ -608,11 +611,28 @@ public class AppManagerImpl implements AppManager {
 		AppInstance appInstance = new AppInstance(instanceId, appInfo,
 				runtimeOptions, simulationId, simulationId, process);
 		appInstance.setApp_info(appInfo);
+		
+		
+		
+		
 		if (!AppType.REMOTE.equals(appInfo.getType())){
 			watch(appInstance);
 		}
 		// add to app instances map
 		appInstances.put(instanceId, appInstance);
+		
+		//TODO: uncomment next line when we are ready to store app input.
+		//timeseriesDataManager.storeAppInput(simulationId, appId, instanceId);
+		
+		
+		try {
+			timeseriesDataManager.storeAppOutput(simulationId, appId, instanceId);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 
 		return instanceId;
 	}

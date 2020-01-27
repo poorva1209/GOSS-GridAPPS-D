@@ -56,6 +56,7 @@ import gov.pnnl.goss.gridappsd.api.AppManager;
 import gov.pnnl.goss.gridappsd.api.LogManager;
 import gov.pnnl.goss.gridappsd.api.ServiceManager;
 import gov.pnnl.goss.gridappsd.api.SimulationManager;
+import gov.pnnl.goss.gridappsd.api.TimeseriesDataManager;
 import gov.pnnl.goss.gridappsd.dto.LogMessage;
 import gov.pnnl.goss.gridappsd.dto.LogMessage.LogLevel;
 import gov.pnnl.goss.gridappsd.dto.LogMessage.ProcessStatus;
@@ -98,6 +99,9 @@ public class SimulationManagerImpl implements SimulationManager{
 	
 	@ServiceDependency
     private volatile SecurityConfig securityConfig;
+	
+	@ServiceDependency
+	TimeseriesDataManager timeseriesDataManager;
 	
 	@ServiceDependency
 	LogManager logManager;
@@ -147,9 +151,7 @@ public class SimulationManagerImpl implements SimulationManager{
 						ProcessStatus.STARTING, 
 						true),simContext.getSimulationUser(),
 						GridAppsDConstants.topic_platformLog);
-			} catch (Exception e2) {
-				log.warn("Error while reporting status "+e2.getMessage());
-			}
+			
 			
 			simContexts.put(simContext.getSimulationId(), simContext);
 			
@@ -158,7 +160,14 @@ public class SimulationManagerImpl implements SimulationManager{
 			SimulationProcess simProc = new SimulationProcess(simContext, serviceManager, 
 						simulationConfig, simulationId, logManager, appManager, client, securityConfig);
 //			simProcesses.put(simContext.getSimulationId(), simProc);
+			
+			timeseriesDataManager.storeSimulationInput(new Integer(simulationId).toString());
+			timeseriesDataManager.storeSimulationOutput(new Integer(simulationId).toString());
+			
 			simProc.start();
+			} catch (Exception e2) {
+				log.warn("Error while reporting status "+e2.getMessage());
+			}
 	}
 	@Override
 	public void pauseSimulation(String simulationId){

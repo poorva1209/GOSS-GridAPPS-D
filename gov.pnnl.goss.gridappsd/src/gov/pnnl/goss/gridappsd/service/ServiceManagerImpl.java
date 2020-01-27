@@ -64,6 +64,7 @@ import org.apache.felix.dm.annotation.api.Start;
 
 import gov.pnnl.goss.gridappsd.api.LogManager;
 import gov.pnnl.goss.gridappsd.api.ServiceManager;
+import gov.pnnl.goss.gridappsd.api.TimeseriesDataManager;
 import gov.pnnl.goss.gridappsd.dto.EnvironmentVariable;
 import gov.pnnl.goss.gridappsd.dto.LogMessage;
 import gov.pnnl.goss.gridappsd.dto.UserOptions;
@@ -90,16 +91,14 @@ public class ServiceManagerImpl implements ServiceManager{
 	@ServiceDependency
 	private volatile SecurityConfig securityConfig;
 	
+	@ServiceDependency
+	private volatile TimeseriesDataManager timeseriesDataManager;
+	
 	private HashMap<String, ServiceInfo> services = new HashMap<String, ServiceInfo>();
 	
 	private Dictionary<String, ?> configurationProperties;
 	
 	private HashMap<String, ServiceInstance> serviceInstances = new HashMap<String, ServiceInstance>();
-	
-	public String simulationId;
-	public String simulationPort;
-	
-	
 	
 	public ServiceManagerImpl() {
 	}
@@ -120,10 +119,9 @@ public class ServiceManagerImpl implements ServiceManager{
 	 */
 	@Start
 	public void start(){
-		//statusReporter.reportStatus(String.format("Starting %s", this.getClass().getName()));
 		try{
 		logManager.log(new LogMessage(this.getClass().getSimpleName(), 
-				simulationId,
+				null,
 				new Date().getTime(), 
 				"Starting "+this.getClass().getName(), 
 				LogLevel.INFO, 
@@ -251,8 +249,7 @@ public class ServiceManagerImpl implements ServiceManager{
 	@Override
 	public String startServiceForSimultion(String serviceId, HashMap<String, Object> runtimeOptions,  Map<String, Object> simulationContext) {
 		
-		if(simulationId == null)
-			this.simulationId = simulationContext.get("simulationId").toString();
+		String simulationId = simulationContext.get("simulationId").toString();
 				
 		String instanceId = serviceId+"-"+new Date().getTime();
 		// get execution path
@@ -382,6 +379,10 @@ public class ServiceManagerImpl implements ServiceManager{
 				throw new RuntimeException("Type not recognized "+serviceInfo.getType());
 			}
 			
+			//TODO: uncomment next line when we are ready to store service input.
+			//timeseriesDataManager.storeServiceInput(simulationId, serviceId, instanceId);
+			timeseriesDataManager.storeServiceOutput(simulationId, serviceId, instanceId);
+			
 			
 		} catch (IOException e) {
 			
@@ -416,6 +417,30 @@ public class ServiceManagerImpl implements ServiceManager{
 					true), 
 					securityConfig.getManagerUser(),
 					GridAppsDConstants.topic_simulationLog+simulationId);
+		} catch (Exception e) {
+			
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			String sStackTrace = sw.toString(); // stack trace as a string
+			System.out.println(sStackTrace);
+			
+			StringBuilder commandString = new StringBuilder();
+			for (String s : commands)
+			{
+				commandString.append(s);
+				commandString.append(" ");
+			}
+			
+			logManager.log(new LogMessage(this.getClass().getSimpleName(), 
+					simulationId, 
+					new Date().getTime(), 
+					sStackTrace,
+					LogLevel.ERROR,
+					ProcessStatus.ERROR,
+					true), 
+					securityConfig.getManagerUser(),
+					GridAppsDConstants.topic_simulationLog+simulationId);
 		}
 		
 		//create serviceinstance object
@@ -424,6 +449,9 @@ public class ServiceManagerImpl implements ServiceManager{
 		
 		//add to service instances map
 		serviceInstances.put(instanceId, serviceInstance);
+		
+		
+		
 		
 		watch(serviceInstance);
 		
@@ -501,12 +529,12 @@ public class ServiceManagerImpl implements ServiceManager{
 	            String line = null;
 	            try {
 	                while ((line = input.readLine()) != null) {
-	                	logManager.log(new LogMessage(this.getClass().getSimpleName(),serviceInstance.getInstance_id(), new Date().getTime(), line, LogLevel.DEBUG, ProcessStatus.RUNNING, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+simulationId);
+	                	logManager.log(new LogMessage(this.getClass().getSimpleName(),serviceInstance.getInstance_id(), new Date().getTime(), line, LogLevel.DEBUG, ProcessStatus.RUNNING, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+serviceInstance.getSimulation_id());
 	                }
 	            } catch (IOException e) {
 	            	if(!(e.getMessage().contains("Stream closed"))){
 	            	e.printStackTrace();
-                	logManager.log(new LogMessage(this.getClass().getName(),serviceInstance.getInstance_id(), new Date().getTime(), e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+simulationId);
+                	logManager.log(new LogMessage(this.getClass().getName(),serviceInstance.getInstance_id(), new Date().getTime(), e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+serviceInstance.getSimulation_id());
 	            	}
 	            }
 	        }

@@ -324,7 +324,7 @@ public class ProcessNewSimulationRequest {
 			simContext.serviceInstanceIds = connectServiceInstanceIds;
 			simContext.appInstanceIds = connectedAppInstanceIds;
 			
-			dataManager.processDataRequest(simContext, "timeseries", simulationId, null, username);
+			//dataManager.processDataRequest(simContext, "timeseries", simulationId, null, username);
 			
 			// start simulation
 			logManager.log(new LogMessage(source, simId,new Date().getTime(),
