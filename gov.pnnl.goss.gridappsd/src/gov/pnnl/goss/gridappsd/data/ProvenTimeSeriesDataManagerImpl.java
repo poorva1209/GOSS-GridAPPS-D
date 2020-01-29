@@ -55,14 +55,14 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
 	@ServiceDependency
 	private volatile ConfigurationManager configManager;
 	
-	@ServiceDependency
+	/*@ServiceDependency
 	private volatile SimulationManager simulationManager;
 	
 	@ServiceDependency
 	private volatile ServiceManager serviceManager;
 	
 	@ServiceDependency
-	private volatile AppManager appManager;
+	private volatile AppManager appManager;*/
 	
 	@ServiceDependency
 	private volatile SecurityConfig securityConfig;
@@ -146,7 +146,7 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
 	@Override
     public void storeAllData(SimulationContext simulationContext) throws Exception{
     	
-    	String simulationId = simulationContext.getSimulationId();
+    	/*String simulationId = simulationContext.getSimulationId();
     	
     	storeSimulationInput(simulationId);
     	storeSimulationOutput(simulationId);
@@ -162,7 +162,7 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
         	String appId = appManager.getAppIdForInstance(instanceId);
         	storeAppInput(simulationId, appId, instanceId);
         	storeAppOutput(simulationId, appId, instanceId);
-        }
+        }*/
     }
     
     
@@ -189,7 +189,7 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
                             new Date().getTime(), "Error storing timeseries data for message at "+event.getDestination()+" : "+sStackTrace, 
                             LogLevel.DEBUG, ProcessStatus.RUNNING, true), 
                     		event.getUsername(),
-                            GridAppsDConstants.topic_platformLog);
+                            GridAppsDConstants.topic_simulationLog+topic.substring(topic.lastIndexOf(".")));
                 }
             }
         });
