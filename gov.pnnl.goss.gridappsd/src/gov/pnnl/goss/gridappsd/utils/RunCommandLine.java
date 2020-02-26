@@ -40,6 +40,7 @@
 package gov.pnnl.goss.gridappsd.utils;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 //TODO: Could be moved to GOSS core functionality
@@ -54,18 +55,27 @@ public class RunCommandLine {
 			Runtime r = Runtime.getRuntime();
 			Process p = r.exec(command);
 
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					p.getInputStream()));
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(
-					p.getErrorStream()));
-
-			while ((line = br.readLine()) != null) {
-				System.out.println(line.trim());
+			try(BufferedReader br = new BufferedReader(new InputStreamReader(
+					p.getInputStream()))){
+				while ((line = br.readLine()) != null) {
+					System.out.println(line.trim());
+				}
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+			
+			try(BufferedReader br1 = new BufferedReader(new InputStreamReader(
+					p.getErrorStream()))){
+				while ((error = br1.readLine()) != null) {
+					System.out.println(error);
+				}
+			}catch(IOException e){
+				e.printStackTrace();
 			}
 
-			while ((error = br1.readLine()) != null) {
-				System.out.println(error);
-			}
+			
+
+			
 
 		} catch (Exception e) {
 			System.out.println("Exception @RunCommandLine:runCommand");

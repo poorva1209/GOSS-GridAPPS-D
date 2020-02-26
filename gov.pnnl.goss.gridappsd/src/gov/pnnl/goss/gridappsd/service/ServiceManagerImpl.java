@@ -497,18 +497,22 @@ public class ServiceManagerImpl implements ServiceManager{
 		System.out.println("WATCHING "+serviceInstance.getInstance_id());
 	    new Thread() {
 	        public void run() {
-	            BufferedReader input = new BufferedReader(new InputStreamReader(serviceInstance.getProcess().getInputStream()));
-	            String line = null;
-	            try {
-	                while ((line = input.readLine()) != null) {
-	                	logManager.log(new LogMessage(this.getClass().getSimpleName(),serviceInstance.getInstance_id(), new Date().getTime(), line, LogLevel.DEBUG, ProcessStatus.RUNNING, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+simulationId);
-	                }
-	            } catch (IOException e) {
-	            	if(!(e.getMessage().contains("Stream closed"))){
+	            try(BufferedReader input = new BufferedReader(new InputStreamReader(serviceInstance.getProcess().getInputStream()))){
+	            	String line = null;
+		            try {
+		                while ((line = input.readLine()) != null) {
+		                	logManager.log(new LogMessage(this.getClass().getSimpleName(),serviceInstance.getInstance_id(), new Date().getTime(), line, LogLevel.DEBUG, ProcessStatus.RUNNING, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+simulationId);
+		                }
+		            } catch (IOException e) {
+		            	if(!(e.getMessage().contains("Stream closed"))){
+		            	e.printStackTrace();
+	                	logManager.log(new LogMessage(this.getClass().getName(),serviceInstance.getInstance_id(), new Date().getTime(), e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+simulationId);
+		            	}
+		            }
+	            } catch(IOException e){
 	            	e.printStackTrace();
-                	logManager.log(new LogMessage(this.getClass().getName(),serviceInstance.getInstance_id(), new Date().getTime(), e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false), securityConfig.getManagerUser(), GridAppsDConstants.topic_simulationLog+simulationId);
-	            	}
 	            }
+	            
 	        }
 	    }.start();
 	}

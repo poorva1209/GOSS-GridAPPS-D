@@ -756,16 +756,20 @@ public class AppManagerImpl implements AppManager {
 		System.out.println("WATCHING "+appInstance.getInstance_id());
 	    new Thread() {
 	        public void run() {
-	            BufferedReader input = new BufferedReader(new InputStreamReader(appInstance.getProcess().getInputStream()));
-	            String line = null;
-	            try {
-	                while ((line = input.readLine()) != null) {
-	                	logManager.log(new LogMessage(this.getClass().getName(),appInstance.getInstance_id(), new Date().getTime(), line, LogLevel.DEBUG, ProcessStatus.RUNNING, false), username, GridAppsDConstants.topic_platformLog);
-	                }
-	            } catch (IOException e) {
-	            	e.printStackTrace();
-                	logManager.log(new LogMessage(this.getClass().getName(),appInstance.getInstance_id(), new Date().getTime(), e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false), username, GridAppsDConstants.topic_platformLog);
+	            try(BufferedReader input = new BufferedReader(new InputStreamReader(appInstance.getProcess().getInputStream()))){
+	            	 try {
+	            		String line = null;
+	 	                while ((line = input.readLine()) != null) {
+	 	                	logManager.log(new LogMessage(this.getClass().getName(),appInstance.getInstance_id(), new Date().getTime(), line, LogLevel.DEBUG, ProcessStatus.RUNNING, false), username, GridAppsDConstants.topic_platformLog);
+	 	                }
+	 	            } catch (IOException e) {
+	 	            	e.printStackTrace();
+	                 	logManager.log(new LogMessage(this.getClass().getName(),appInstance.getInstance_id(), new Date().getTime(), e.getMessage(), LogLevel.ERROR, ProcessStatus.ERROR, false), username, GridAppsDConstants.topic_platformLog);
+	 	            }
 	            }
+	           catch(IOException e){
+	        	   e.printStackTrace();
+	           }
 	        }
 	    }.start();
 	}
