@@ -146,7 +146,7 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
 	@Override
     public void storeAllData(SimulationContext simulationContext) throws Exception{
     	
-    	/*String simulationId = simulationContext.getSimulationId();
+    	String simulationId = simulationContext.getSimulationId();
     	
     	storeSimulationInput(simulationId);
     	storeSimulationOutput(simulationId);
@@ -162,7 +162,7 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
         	String appId = appManager.getAppIdForInstance(instanceId);
         	storeAppInput(simulationId, appId, instanceId);
         	storeAppOutput(simulationId, appId, instanceId);
-        }*/
+        }
     }
     
     
