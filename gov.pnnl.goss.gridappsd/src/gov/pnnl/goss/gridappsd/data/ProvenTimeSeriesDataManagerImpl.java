@@ -144,15 +144,21 @@ public class ProvenTimeSeriesDataManagerImpl implements TimeseriesDataManager, D
 		
 		ProvenResponse response = null;
 		
-		if(requestTimeseriesData instanceof RequestTimeseriesDataAdvanced){
-			provenQueryProducer.restProducer(provenAdvancedQueryUri, null, null);
-			provenQueryProducer.setMessageInfo("GridAPPSD", "QUERY", this.getClass().getSimpleName(), keywords);
-			response = provenQueryProducer.getAdvancedTsQuery(requestTimeseriesData.toString(), requestId);
-		}else {
-			provenQueryProducer.restProducer(provenQueryUri, null, null);
-			provenQueryProducer.setMessageInfo("GridAPPSD", "QUERY", this.getClass().getSimpleName(), keywords);
-			response = provenQueryProducer.sendMessage(requestTimeseriesData.toString(), requestId);
-			}
+		try{
+			if(requestTimeseriesData instanceof RequestTimeseriesDataAdvanced){
+				provenQueryProducer.restProducer(provenAdvancedQueryUri, null, null);
+				provenQueryProducer.setMessageInfo("GridAPPSD", "QUERY", this.getClass().getSimpleName(), keywords);
+				response = provenQueryProducer.getAdvancedTsQuery(requestTimeseriesData.toString(), requestId);
+			}else {
+				provenQueryProducer.restProducer(provenQueryUri, null, null);
+				provenQueryProducer.setMessageInfo("GridAPPSD", "QUERY", this.getClass().getSimpleName(), keywords);
+				response = provenQueryProducer.sendMessage(requestTimeseriesData.toString(), requestId);
+				}
+		}
+		catch(Exception e){
+			logManager.error(ProcessStatus.ERROR, null, "Error executing timeseries request: "+requestTimeseriesData.toString());
+		}
+		
 		TimeSeriesEntryResult result = TimeSeriesEntryResult.parse(response.data.toString());
 		if(result.getData().size()==0)
 			return null;
